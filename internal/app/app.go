@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/AlexandrKudryavtsev/go-job-queue/config"
+	"github.com/AlexandrKudryavtsev/go-job-queue/internal/queue"
 	"github.com/AlexandrKudryavtsev/go-job-queue/pkg/httpserver"
 	"github.com/AlexandrKudryavtsev/go-job-queue/pkg/logger"
 )
@@ -14,6 +15,12 @@ import (
 func Run(cfg *config.Config) error {
 	log := logger.New(cfg.Logger)
 	log.Info("create logger")
+
+	_ = queue.New(queue.Config{
+		VisibilityTimeout: cfg.Queue.VisibilityTimeout.Duration,
+		RetryBaseDelay:    cfg.Queue.RetryBaseDelay.Duration,
+		MaxPayloadSize:    cfg.Queue.MaxPayloadSize,
+	})
 
 	mx := http.NewServeMux()
 
