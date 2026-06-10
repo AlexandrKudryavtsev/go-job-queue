@@ -245,9 +245,15 @@ func (q *Queue) requeueExpiredProcessing() int {
 
 		counter++
 
-		currentJob.Status = job.StatusQueued
 		currentJob.StartedAt = nil
-		currentJob.AvailableAt = now
+
+		if currentJob.Attempts >= currentJob.MaxAttempts {
+			currentJob.Status = job.StatusDead
+			currentJob.FinishedAt = &now
+		} else {
+			currentJob.Status = job.StatusQueued
+			currentJob.AvailableAt = now
+		}
 	}
 
 	return counter
