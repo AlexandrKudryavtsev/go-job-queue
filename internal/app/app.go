@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/AlexandrKudryavtsev/go-job-queue/config"
+	"github.com/AlexandrKudryavtsev/go-job-queue/internal/httpapi"
 	"github.com/AlexandrKudryavtsev/go-job-queue/internal/queue"
 	"github.com/AlexandrKudryavtsev/go-job-queue/pkg/httpserver"
 	"github.com/AlexandrKudryavtsev/go-job-queue/pkg/logger"
@@ -30,6 +31,9 @@ func Run(cfg *config.Config) error {
 	go appQueue.Start(queueContext)
 
 	mx := http.NewServeMux()
+
+	handler := httpapi.New(appQueue)
+	handler.Register(mx)
 
 	httpServer := httpserver.New(
 		mx,
