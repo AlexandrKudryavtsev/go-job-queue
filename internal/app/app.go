@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,12 +17,17 @@ func Run(cfg *config.Config) error {
 	log := logger.New(cfg.Logger)
 	log.Info("create logger")
 
-	_ = queue.New(queue.Config{
+	appQueue := queue.New(queue.Config{
 		VisibilityTimeout: cfg.Queue.VisibilityTimeout.Duration,
 		RetryBaseDelay:    cfg.Queue.RetryBaseDelay.Duration,
 		MaxPayloadSize:    cfg.Queue.MaxPayloadSize,
 		SweepInterval:     cfg.Queue.SweepInterval.Duration,
 	})
+
+	queueContext, cancelQueueContext := context.WithCancel(context.Background())
+	defer cancelQueueContext()
+
+	go appQueue.Start(queueContext)
 
 	mx := http.NewServeMux()
 
@@ -50,7 +56,6 @@ func Run(cfg *config.Config) error {
 			return err
 		}
 		log.Info("http server stopped")
-
 	case sig := <-quit:
 		log.Info("received signal", "signal", sig)
 
