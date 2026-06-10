@@ -20,6 +20,7 @@ func Run(cfg *config.Config) error {
 		VisibilityTimeout: cfg.Queue.VisibilityTimeout.Duration,
 		RetryBaseDelay:    cfg.Queue.RetryBaseDelay.Duration,
 		MaxPayloadSize:    cfg.Queue.MaxPayloadSize,
+		SweepInterval:     cfg.Queue.SweepInterval.Duration,
 	})
 
 	mx := http.NewServeMux()

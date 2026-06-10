@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"encoding/json"
 	"slices"
 	"strings"
@@ -14,6 +15,7 @@ import (
 type Config struct {
 	VisibilityTimeout time.Duration
 	RetryBaseDelay    time.Duration
+	SweepInterval     time.Duration
 	MaxPayloadSize    int
 }
 
@@ -214,4 +216,53 @@ func (q *Queue) Dead() []job.Job {
 	}
 
 	return jobs
+}
+
+func (q *Queue) requeueExpiredProcessing() int {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	now := time.Now()
+	counter := 0
+
+	for _, jobID := range q.order {
+		currentJob, ok := q.jobs[jobID]
+		if !ok {
+			continue
+		}
+
+		if currentJob.Status != job.StatusProcessing {
+			continue
+		}
+
+		if currentJob.StartedAt == nil {
+			continue
+		}
+
+		if now.Sub(*currentJob.StartedAt) < q.cfg.VisibilityTimeout {
+			continue
+		}
+
+		counter++
+
+		currentJob.Status = job.StatusQueued
+		currentJob.StartedAt = nil
+		currentJob.AvailableAt = now
+	}
+
+	return counter
+}
+
+func (q *Queue) Start(ctx context.Context) {
+	ticker := time.NewTicker(q.cfg.SweepInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			q.requeueExpiredProcessing()
+		}
+	}
 }

@@ -25,6 +25,7 @@ type ServerConfig struct {
 type QueueConfig struct {
 	VisibilityTimeout Duration `yaml:"visibility_timeout"`
 	RetryBaseDelay    Duration `yaml:"retry_base_delay"`
+	SweepInterval     Duration `yaml:"sweep_interval"`
 	MaxPayloadSize    int      `yaml:"max_payload_size"` // bytes
 }
 
@@ -68,6 +69,10 @@ func (c *Config) Validate() error {
 	}
 	if c.Queue.VisibilityTimeout.Duration <= 0 {
 		return fmt.Errorf("invalid visibility timeout")
+	}
+
+	if c.Queue.SweepInterval.Duration <= 0 {
+		return fmt.Errorf("invalid sweep timeout")
 	}
 
 	// logger

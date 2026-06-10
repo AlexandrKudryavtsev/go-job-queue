@@ -8,6 +8,7 @@ queue:
   visibility_timeout: "30s"
   retry_base_delay: "5s"
   max_payload_size: 1048576
+  sweep_interval: "1s"
 
 logger:
   format: "text"
