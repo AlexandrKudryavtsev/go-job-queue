@@ -31,3 +31,7 @@ type createJobRequest struct {
 	MaxAttempts  int             `json:"maxAttempts"`
 	DelaySeconds int             `json:"delaySeconds"`
 }
+
+type nackJobRequest struct {
+	Error string `json:"error"`
+}
